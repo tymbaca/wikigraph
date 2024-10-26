@@ -45,8 +45,8 @@ func (s *storage) GetURLToProcess(ctx context.Context) (string, error) {
 		Where("status = ?", _pending).
 		OrderBy("RANDOM()").
 		Limit(1).MustSql()
-	// logger.Debug(subq)
-	qb := squirrel.Update(_articleTable).Set("status", _inProgress).Where("id = ("+subq+")", args...)
+
+	qb := squirrel.Update(_articleTable).Set("status", _inProgress).Where("id = ("+subq+")", args...).Suffix("RETURNING url")
 	q, args := qb.MustSql()
 	logger.Debugf("sql: %s | args: %v", q, args)
 
