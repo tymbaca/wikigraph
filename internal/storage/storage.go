@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/tymbaca/wikigraph/internal/errs"
+	"github.com/tymbaca/wikigraph/internal/logger"
 )
 
 type storage struct {
@@ -20,7 +21,7 @@ func New(db *sql.DB) *storage {
 }
 
 func (s *storage) ResetInProgressURLs(ctx context.Context) error {
-	_, err := squirrel.Update("url").Set("status", pending).Where(squirrel.Eq{"status": []status{inProgress, failed}}).RunWith(s.db).ExecContext(ctx)
+	_, err := squirrel.Update(_articleTable).Set("status", _pending).Where(squirrel.Eq{"status": []status{_inProgress, _failed}}).RunWith(s.db).ExecContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -29,8 +30,10 @@ func (s *storage) ResetInProgressURLs(ctx context.Context) error {
 }
 
 func (s *storage) GetNotCompletedCount(ctx context.Context) (int, error) {
+	qb := squirrel.Select("COUNT(*)").From(_articleTable).Where("status != ?", _completed)
+
 	var count int
-	if err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM url WHERE status != ?", completed).Scan(&count); err != nil {
+	if err := qb.RunWith(s.db).QueryRowContext(ctx).Scan(&count); err != nil {
 		return 0, err
 	}
 
@@ -38,8 +41,17 @@ func (s *storage) GetNotCompletedCount(ctx context.Context) (int, error) {
 }
 
 func (s *storage) GetURLToProcess(ctx context.Context) (string, error) {
+	subq, args := squirrel.Select("id").From(_articleTable).
+		Where("status = ?", _pending).
+		OrderBy("RANDOM()").
+		Limit(1).MustSql()
+	// logger.Debug(subq)
+	qb := squirrel.Update(_articleTable).Set("status", _inProgress).Where("id = ("+subq+")", args...)
+	q, args := qb.MustSql()
+	logger.Debugf("sql: %s | args: %v", q, args)
+
 	var url string
-	err := s.db.QueryRowContext(ctx, `UPDATE url SET status = ? WHERE id = (SELECT id FROM url WHERE status = ? ORDER BY RANDOM() LIMIT 1) RETURNING url;`, inProgress, pending).Scan(&url)
+	err := qb.RunWith(s.db).QueryRowContext(ctx).Scan(&url)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", errs.ErrNotFound
@@ -51,8 +63,10 @@ func (s *storage) GetURLToProcess(ctx context.Context) (string, error) {
 }
 
 func (s *storage) GetFailedURL(ctx context.Context) (string, error) {
+	qb := squirrel.Select("url").From(_articleTable).Where("status = ?", _failed)
+
 	var url string
-	err := s.db.QueryRowContext(ctx, `SELECT url FROM url WHERE status = ? LIMIT 1`, failed).Scan(&url)
+	err := qb.RunWith(s.db).QueryRowContext(ctx).Scan(&url)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", errs.ErrNotFound
@@ -68,7 +82,7 @@ func (s *storage) AddPendingURLs(ctx context.Context, urls ...string) error {
 		return nil
 	}
 
-	qb := squirrel.Insert("url").Columns("url")
+	qb := squirrel.Insert(_articleTable).Columns("url")
 	for _, url := range urls {
 		qb = qb.Values(url)
 	}
@@ -85,7 +99,7 @@ func (s *storage) AddPendingURLs(ctx context.Context, urls ...string) error {
 func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []string) error {
 	return s.inTx(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		// Set status to COMPLETED
-		_, err := squirrel.Update("url").Set("status", completed).
+		_, err := squirrel.Update(_articleTable).Set("status", _completed).
 			Where(squirrel.Eq{"url": parent}).
 			RunWith(tx).
 			ExecContext(ctx)
@@ -99,7 +113,7 @@ func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []str
 		}
 
 		// Insert urls and get IDs
-		iqb := squirrel.Insert("url").Columns("url")
+		iqb := squirrel.Insert(_articleTable).Columns("url")
 		for _, child := range childs {
 			iqb = iqb.Values(child)
 		}
@@ -144,8 +158,8 @@ func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []str
 }
 
 func (s *storage) SetFailed(ctx context.Context, url string, failErr error) error {
-	_, err := squirrel.Update("url").
-		Set("status", failed).
+	_, err := squirrel.Update(_articleTable).
+		Set("status", _failed).
 		Set("error", failErr.Error()).
 		Where(squirrel.Eq{"url": url}).
 		RunWith(s.db).Exec()
@@ -157,8 +171,10 @@ func (s *storage) SetFailed(ctx context.Context, url string, failErr error) erro
 }
 
 func (s *storage) getIDInTx(ctx context.Context, tx *sql.Tx, url string) (int, error) {
+	qb := squirrel.Select("id").From(_articleTable).Where("url = ?", url)
+
 	var id int
-	if err := tx.QueryRowContext(ctx, "SELECT id FROM url WHERE url = ?", url).Scan(&id); err != nil {
+	if err := qb.RunWith(tx).QueryRowContext(ctx).Scan(&id); err != nil {
 		return 0, err
 	}
 

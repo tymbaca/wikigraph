@@ -1,10 +1,14 @@
 package storage
 
+const (
+	_articleTable = "article"
+)
+
 type status string
 
 const (
-	pending    status = "PENDING"
-	inProgress status = "IN_PROGRESS"
-	completed  status = "COMPLETED"
-	failed     status = "FAILED"
+	_pending    status = "PENDING"
+	_inProgress status = "IN_PROGRESS"
+	_completed  status = "COMPLETED"
+	_failed     status = "FAILED"
 )
