@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/samber/lo"
 )
 
 func NewWikiParser() *WikiParser {
@@ -22,13 +23,13 @@ type WikiParser struct {
 
 var wikiLinkRegex = regexp.MustCompile(`href="(\/wiki.*?)"`)
 
-func (w *WikiParser) ParseChilds(ctx context.Context, parentURL string) ([]string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parentURL, nil)
+func (w *WikiParser) ParseChilds(ctx context.Context, parent string) ([]string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parent, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	baseURL, err := url.Parse(parentURL)
+	parentURL, err := url.Parse(parent)
 	if err != nil {
 		return nil, err
 	}
@@ -46,14 +47,33 @@ func (w *WikiParser) ParseChilds(ctx context.Context, parentURL string) ([]strin
 
 	childs := make([]string, 0, 100)
 	doc.Find("#bodyContent").Not(".mw-references-wrap").Each(func(i int, s *goquery.Selection) {
-		text := s.Text()
+		text, err := s.Html()
+		if err != nil {
+			return
+		}
 		matches := wikiLinkRegex.FindAllStringSubmatch(text, -1)
 		for _, match := range matches {
-			child := match[1]
-			child = "https://" + baseURL.Host + child
+			childURL, err := url.Parse(match[1])
+			if err != nil {
+				return
+			}
+
+			// leave only schema, domain and path
+			childURL.Fragment = ""
+			childURL.RawFragment = ""
+			childURL.RawQuery = ""
+
+			var child string
+			if !childURL.IsAbs() {
+				childURL.Scheme = parentURL.Scheme
+				childURL.Host = parentURL.Host
+			}
+
+			child = childURL.String()
+
 			childs = append(childs, child)
 		}
 	})
 
-	return childs, nil
+	return lo.Uniq(childs), nil
 }

@@ -20,7 +20,7 @@ func New(db *sql.DB) *storage {
 }
 
 func (s *storage) ResetInProgressURLs(ctx context.Context) error {
-	_, err := squirrel.Update("url").Set("status", pending).Where(squirrel.Eq{"status": inProgress}).RunWith(s.db).ExecContext(ctx)
+	_, err := squirrel.Update("url").Set("status", pending).Where(squirrel.Eq{"status": []status{inProgress, failed}}).RunWith(s.db).ExecContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (s *storage) GetNotCompletedCount(ctx context.Context) (int, error) {
 
 func (s *storage) GetURLToProcess(ctx context.Context) (string, error) {
 	var url string
-	err := s.db.QueryRowContext(ctx, `UPDATE url SET status = ? WHERE id = (SELECT id FROM url WHERE status = ? LIMIT 1) RETURNING url;`, inProgress, pending).Scan(&url)
+	err := s.db.QueryRowContext(ctx, `UPDATE url SET status = ? WHERE id = (SELECT id FROM url WHERE status = ? ORDER BY RANDOM() LIMIT 1) RETURNING url;`, inProgress, pending).Scan(&url)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return "", errs.ErrNotFound
@@ -100,7 +100,6 @@ func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []str
 
 		// Insert urls and get IDs
 		iqb := squirrel.Insert("url").Columns("url")
-		iqb = iqb.Values(parent)
 		for _, child := range childs {
 			iqb = iqb.Values(child)
 		}

@@ -23,7 +23,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	db, err := sql.Open("sqlite3", "./example.db") // TODO flag
+	db, err := sql.Open("sqlite3", "./example1.db") // TODO flag
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,13 +41,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+	db.SetMaxOpenConns(1)
+
+	// _, err = db.Exec("DELETE FROM url; DELETE FROM relation;")
+	// if err != nil {
+	// 	panic(err)
+	// }
+
 	logger.Info("Connected to the database!")
 
 	parser := parser.NewWikiParser()
 	storage := storage.New(db)
-	workers := workers.New(10, time.Duration(50*time.Millisecond), parser, storage)
+	workers := workers.New(20, time.Duration(50*time.Millisecond), parser, storage)
 
-	workers.Launch(ctx, `https://ru.wikipedia.org/wiki/%d0%9c%d0%b8%d1%84`)
+	// workers.Launch(ctx, `https://ru.wikipedia.org/wiki/%d0%9c%d0%b8%d1%84`)
+	workers.Launch(ctx, `https://en.wikipedia.org/wiki/Myth`)
 }
 
 type fakeAPI struct{}
