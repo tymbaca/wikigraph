@@ -23,7 +23,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	db, err := sql.Open("sqlite3", "./example1.db") // TODO flag
+	db, err := sql.Open("sqlite3", "./example2.db") // TODO flag
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +55,8 @@ func main() {
 	workers := workers.New(20, time.Duration(50*time.Millisecond), parser, storage)
 
 	// workers.Launch(ctx, `https://ru.wikipedia.org/wiki/%d0%9c%d0%b8%d1%84`)
-	workers.Launch(ctx, `https://en.wikipedia.org/wiki/Myth`)
+	// workers.Launch(ctx, `https://en.wikipedia.org/wiki/Myth`)
+	workers.Launch(ctx, `https://os.wikipedia.org/wiki/%D0%A2%D1%83%D1%80%D0%BA`)
 }
 
 type fakeAPI struct{}

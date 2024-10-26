@@ -102,8 +102,9 @@ func (ws *Workers) retryFailedURL(ctx context.Context, workerID int) error {
 
 func (ws *Workers) parseURL(_ context.Context, workerID int) error {
 	// detach from main context
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
+	// ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	// defer cancel()
+	ctx := context.Background()
 
 	url, err := ws.storage.GetURLToProcess(ctx)
 	if err != nil {
@@ -114,9 +115,10 @@ func (ws *Workers) parseURL(_ context.Context, workerID int) error {
 
 		return fmt.Errorf("worker %d: got error when getting pending url: %s", workerID, err)
 	}
+
 	logger.Infof("worker %d: processing url: %s", workerID, url)
 
-	childs, err := ws.parser.ParseChilds(ctx, url)
+	article, err := ws.parser.Parse(ctx, url)
 	if err != nil {
 		if failErr := ws.storage.SetFailed(ctx, url, err); failErr != nil {
 			logger.Errorf("worker %d: can't set url status to failed, url: %s, err: %s", workerID, url, failErr)
@@ -124,7 +126,7 @@ func (ws *Workers) parseURL(_ context.Context, workerID int) error {
 		return fmt.Errorf("worker %d: got error when parsing url: %s", workerID, err)
 	}
 
-	err = ws.storage.SaveChildURLs(ctx, url, childs)
+	err = ws.storage.SaveParsedArticle(ctx, article)
 	if err != nil {
 		return fmt.Errorf("worker %d: got error when saving url childs to storage: %s", workerID, err)
 	}

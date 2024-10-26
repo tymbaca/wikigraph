@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/tymbaca/wikigraph/internal/errs"
+	"github.com/tymbaca/wikigraph/internal/model"
 )
 
 type storage struct {
@@ -93,11 +94,11 @@ func (s *storage) AddPendingURLs(ctx context.Context, urls ...string) error {
 	return nil
 }
 
-func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []string) error {
+func (s *storage) SaveParsedArticle(ctx context.Context, article model.ParsedArticle) error {
 	return s.inTx(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		// Set status to COMPLETED
 		_, err := squirrel.Update(_articleTable).Set("status", _completed).
-			Where(squirrel.Eq{"url": parent}).
+			Where(squirrel.Eq{"url": article.URL}).
 			RunWith(tx).
 			ExecContext(ctx)
 		if err != nil {
@@ -105,13 +106,13 @@ func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []str
 		}
 
 		// We don't need to create relations nor new urls if there is no childs
-		if len(childs) == 0 {
+		if len(article.ChildURLs) == 0 {
 			return nil
 		}
 
 		// Insert urls and get IDs
 		iqb := squirrel.Insert(_articleTable).Columns("url")
-		for _, child := range childs {
+		for _, child := range article.ChildURLs {
 			iqb = iqb.Values(child)
 		}
 		iqb = iqb.Suffix("ON CONFLICT (url) DO UPDATE SET url = EXCLUDED.url RETURNING id")
@@ -135,7 +136,7 @@ func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []str
 			return err
 		}
 
-		parentID, err := s.getIDInTx(ctx, tx, parent)
+		parentID, err := s.getIDInTx(ctx, tx, article.URL)
 		if err != nil {
 			return err
 		}

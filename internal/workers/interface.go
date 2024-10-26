@@ -1,9 +1,13 @@
 package workers
 
-import "context"
+import (
+	"context"
+
+	"github.com/tymbaca/wikigraph/internal/model"
+)
 
 type Parser interface {
-	ParseChilds(ctx context.Context, url string) ([]string, error)
+	Parse(ctx context.Context, url string) (model.ParsedArticle, error)
 }
 
 type Storage interface {
@@ -12,6 +16,6 @@ type Storage interface {
 	GetURLToProcess(ctx context.Context) (string, error)
 	GetFailedURL(ctx context.Context) (string, error)
 	AddPendingURLs(ctx context.Context, urls ...string) error
-	SaveChildURLs(ctx context.Context, url string, childs []string) error
+	SaveParsedArticle(ctx context.Context, article model.ParsedArticle) error
 	SetFailed(ctx context.Context, url string, err error) error
 }

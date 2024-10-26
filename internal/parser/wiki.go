@@ -3,12 +3,14 @@ package parser
 import (
 	"context"
 	"net/http"
-	"net/url"
+	urllib "net/url"
 	"regexp"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/samber/lo"
+	"github.com/tymbaca/wikigraph/internal/logger"
+	"github.com/tymbaca/wikigraph/internal/model"
 )
 
 func NewWikiParser() *WikiParser {
@@ -23,26 +25,26 @@ type WikiParser struct {
 
 var wikiLinkRegex = regexp.MustCompile(`href="(\/wiki.*?)"`)
 
-func (w *WikiParser) ParseChilds(ctx context.Context, parent string) ([]string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, parent, nil)
+func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return model.ParsedArticle{}, err
 	}
 
-	parentURL, err := url.Parse(parent)
+	parentURL, err := urllib.Parse(url)
 	if err != nil {
-		return nil, err
+		return model.ParsedArticle{}, err
 	}
 
 	resp, err := w.client.Do(req)
 	if err != nil {
-		return nil, err
+		return model.ParsedArticle{}, err
 	}
 	defer resp.Body.Close()
 
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
-		return nil, err
+		return model.ParsedArticle{}, err
 	}
 
 	childs := make([]string, 0, 100)
@@ -53,7 +55,7 @@ func (w *WikiParser) ParseChilds(ctx context.Context, parent string) ([]string, 
 		}
 		matches := wikiLinkRegex.FindAllStringSubmatch(text, -1)
 		for _, match := range matches {
-			childURL, err := url.Parse(match[1])
+			childURL, err := urllib.Parse(match[1])
 			if err != nil {
 				return
 			}
@@ -70,10 +72,19 @@ func (w *WikiParser) ParseChilds(ctx context.Context, parent string) ([]string, 
 			}
 
 			child = childURL.String()
+			child, err = urllib.PathUnescape(child) // TODO: do we really need this?
+			if err != nil {
+				logger.Fatalf("can't unescape the path: %s", childURL.String())
+				return
+			}
 
 			childs = append(childs, child)
 		}
 	})
 
-	return lo.Uniq(childs), nil
+	return model.ParsedArticle{
+		Name:      "",
+		URL:       url,
+		ChildURLs: lo.Uniq(childs),
+	}, nil
 }
