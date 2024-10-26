@@ -7,7 +7,6 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/tymbaca/wikigraph/internal/errs"
-	"github.com/tymbaca/wikigraph/internal/logger"
 )
 
 type storage struct {
@@ -47,8 +46,6 @@ func (s *storage) GetURLToProcess(ctx context.Context) (string, error) {
 		Limit(1).MustSql()
 
 	qb := squirrel.Update(_articleTable).Set("status", _inProgress).Where("id = ("+subq+")", args...).Suffix("RETURNING url")
-	q, args := qb.MustSql()
-	logger.Debugf("sql: %s | args: %v", q, args)
 
 	var url string
 	err := qb.RunWith(s.db).QueryRowContext(ctx).Scan(&url)
@@ -144,7 +141,7 @@ func (s *storage) SaveChildURLs(ctx context.Context, parent string, childs []str
 		}
 
 		// Insert relations
-		iqb = squirrel.Insert("relation").Columns("from_id", "to_id")
+		iqb = squirrel.Insert(_relationTable).Columns("from_id", "to_id")
 		for _, childID := range childIDs {
 			iqb = iqb.Values(parentID, childID)
 		}

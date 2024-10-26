@@ -1,7 +1,8 @@
 package storage
 
 const (
-	_articleTable = "article"
+	_articleTable  = "article"
+	_relationTable = "relation"
 )
 
 type status string
