@@ -1,5 +1,7 @@
 package model
 
+type Graph map[int]Article
+
 type Article struct {
 	ID     int
 	Name   string

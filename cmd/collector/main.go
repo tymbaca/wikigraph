@@ -24,7 +24,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	db, err := sql.Open("sqlite3", "./example2.db") // TODO flag
+	db, err := sql.Open("sqlite3", "./wolof-wiki.db") // TODO flag
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,6 +64,12 @@ func main() {
 	}
 
 	workers.Launch(ctx, link)
+
+	graph, err := storage.GetGraph(context.TODO())
+	if err != nil {
+		panic(err)
+	}
+	_ = graph
 }
 
 type fakeAPI struct{}

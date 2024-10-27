@@ -11,11 +11,13 @@ type Parser interface {
 }
 
 type Storage interface {
-	ResetInProgressURLs(ctx context.Context) error
-	GetNotCompletedCount(ctx context.Context) (int, error)
 	GetURLToProcess(ctx context.Context) (string, error)
-	GetFailedURL(ctx context.Context) (string, error)
-	AddPendingURLs(ctx context.Context, urls ...string) error
 	SaveParsedArticle(ctx context.Context, article model.ParsedArticle) error
+
+	AddPendingURLs(ctx context.Context, urls ...string) error
+	ResetInProgressURLs(ctx context.Context) error
 	SetFailed(ctx context.Context, url string, err error) error
+	GetNotCompletedCount(ctx context.Context) (int, error)
+
+	GetGraph(ctx context.Context) (model.Graph, error)
 }
