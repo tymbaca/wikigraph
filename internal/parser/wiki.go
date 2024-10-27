@@ -2,8 +2,11 @@ package parser
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	urllib "net/url"
+	"os"
+	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -12,6 +15,7 @@ import (
 	"github.com/samber/lo"
 	"github.com/tymbaca/wikigraph/internal/logger"
 	"github.com/tymbaca/wikigraph/internal/model"
+	"golang.org/x/net/html"
 )
 
 func NewWikiParser() *WikiParser {
@@ -26,7 +30,10 @@ type WikiParser struct {
 
 var (
 	_wikiLinkRegex   = regexp.MustCompile(`href=["'](\/wiki.*?)["']`)
-	_ignoredSuffixes = []string{".svg", ".png", ".gif", ".jpg", ".jpeg", ".webp"}
+	_ignoredSuffixes = []string{
+		".svg", ".png", ".gif", ".jpg", ".jpeg", ".webp",
+		".SVG", ".PNG", ".GIF", ".JPG", ".JPEG", ".WEBP",
+	}
 )
 
 func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle, error) {
@@ -48,16 +55,29 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 	}
 	defer resp.Body.Close()
 
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	root, err := html.Parse(resp.Body)
 	if err != nil {
 		return model.ParsedArticle{}, err
 	}
 
-	name := doc.Find("#firstHeading").Text()
+	if resp.StatusCode >= 400 {
+		_ = logToFile(path.Base(url), root)
+		return model.ParsedArticle{}, fmt.Errorf("got error from wikipedia (%s), status code %d (%s)", url, resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
+
+	doc := goquery.NewDocumentFromNode(root)
+	if err != nil {
+		return model.ParsedArticle{}, err
+	}
+
+	nameSelection := doc.Find("#firstHeading")
+	name := nameSelection.Text()
 	// logger.Debug(name)
 	if len(name) == 0 {
 		logger.Warnf("can't find article name, url: %s", url)
-		name = parentURL.Path
+		_ = logToFile(path.Base(url), root)
+
+		name = path.Base(parentURL.Path)
 	}
 
 	childs := make([]string, 0, 100)
@@ -84,11 +104,11 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 			}
 
 			child := childURL.String()
-			child, err = urllib.PathUnescape(child)
-			if err != nil {
-				logger.Fatalf("can't unescape the path: %s", childURL.String())
-				return
-			}
+			// child, err = urllib.PathUnescape(child)
+			// if err != nil {
+			// 	logger.Fatalf("can't unescape the path: %s", childURL.String())
+			// 	return
+			// }
 
 			if hasSuffixes(child, _ignoredSuffixes...) {
 				continue
@@ -103,6 +123,15 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 		URL:       url,
 		ChildURLs: lo.Uniq(childs),
 	}, nil
+}
+
+func logToFile(name string, root *html.Node) error {
+	f, err := os.Create("debug/" + name + ".html")
+	if err != nil {
+		return err
+	}
+
+	return html.Render(f, root)
 }
 
 func hasSuffixes(s string, suffixes ...string) bool {

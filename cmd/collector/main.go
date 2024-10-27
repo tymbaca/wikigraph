@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"log"
-	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -59,10 +58,11 @@ func main() {
 	// workers.Launch(ctx, `https://en.wikipedia.org/wiki/Myth`)
 	// workers.Launch(ctx, `https://os.wikipedia.org/wiki/%D0%A2%D1%83%D1%80%D0%BA`)
 	// link, err := url.PathUnescape(`https://wo.wikipedia.org/wiki/Wolof_(l%C3%A0kk)`)
-	link, err := url.PathUnescape(`https://ru.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%9D%D0%B5%D0%B1%D1%80%D0%B0%D1%81%D0%BA%D0%B8`)
-	if err != nil {
-		panic(err)
-	}
+	// link, err := url.PathUnescape(`https://ru.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%9D%D0%B5%D0%B1%D1%80%D0%B0%D1%81%D0%BA%D0%B8`)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	link := `https://ru.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%9D%D0%B5%D0%B1%D1%80%D0%B0%D1%81%D0%BA%D0%B8`
 
 	workers.Launch(ctx, link)
 }

@@ -1,3 +1,4 @@
 .vscode
 *.db
 __debug*
+debug/*
