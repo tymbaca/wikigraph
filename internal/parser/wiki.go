@@ -26,7 +26,7 @@ type WikiParser struct {
 
 var (
 	_wikiLinkRegex   = regexp.MustCompile(`href=["'](\/wiki.*?)["']`)
-	_ignoredSuffixes = []string{".svg", ".png", ".gif", ".jpg", ".jpeg"}
+	_ignoredSuffixes = []string{".svg", ".png", ".gif", ".jpg", ".jpeg", ".webp"}
 )
 
 func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle, error) {
@@ -34,6 +34,8 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 	if err != nil {
 		return model.ParsedArticle{}, err
 	}
+
+	req.URL.Path = req.URL.EscapedPath()
 
 	parentURL, err := urllib.Parse(url)
 	if err != nil {
@@ -51,8 +53,10 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 		return model.ParsedArticle{}, err
 	}
 
-	name := doc.Find("#firstHeading > span").Text()
+	name := doc.Find("#firstHeading").Text()
+	// logger.Debug(name)
 	if len(name) == 0 {
+		logger.Warnf("can't find article name, url: %s", url)
 		name = parentURL.Path
 	}
 

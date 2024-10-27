@@ -102,9 +102,9 @@ func (ws *Workers) retryFailedURL(ctx context.Context, workerID int) error {
 
 func (ws *Workers) parseURL(_ context.Context, workerID int) error {
 	// detach from main context
-	// ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	// defer cancel()
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	// ctx := context.Background()
 
 	url, err := ws.storage.GetURLToProcess(ctx)
 	if err != nil {

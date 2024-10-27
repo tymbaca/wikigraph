@@ -43,7 +43,8 @@ func (s *storage) GetNotCompletedCount(ctx context.Context) (int, error) {
 func (s *storage) GetURLToProcess(ctx context.Context) (string, error) {
 	subq, args := squirrel.Select("id").From(_articleTable).
 		Where("status = ?", _pending).
-		OrderBy("RANDOM()").
+		// OrderBy("RANDOM()"). // BUG: if i don't use it i can't parse article name (and maybe it's childs)
+		// OrderBy("id").
 		Limit(1).MustSql()
 
 	qb := squirrel.Update(_articleTable).Set("status", _inProgress).Where("id = ("+subq+")", args...).Suffix("RETURNING url")
