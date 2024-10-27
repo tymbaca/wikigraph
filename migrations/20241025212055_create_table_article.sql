@@ -2,6 +2,7 @@
 -- +goose StatementBegin
 CREATE TABLE article (
     id  INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
     url TEXT UNIQUE NOT NULL,
     status TEXT NOT NULL DEFAULT 'PENDING',
     error TEXT

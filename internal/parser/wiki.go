@@ -47,6 +47,11 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 		return model.ParsedArticle{}, err
 	}
 
+	name := doc.Find("#firstHeading > span").Text()
+	if len(name) == 0 {
+		name = parentURL.Path
+	}
+
 	childs := make([]string, 0, 100)
 	doc.Find("#bodyContent").Not(".mw-references-wrap").Each(func(i int, s *goquery.Selection) {
 		text, err := s.Html()
@@ -83,7 +88,7 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 	})
 
 	return model.ParsedArticle{
-		Name:      "",
+		Name:      name,
 		URL:       url,
 		ChildURLs: lo.Uniq(childs),
 	}, nil

@@ -97,7 +97,9 @@ func (s *storage) AddPendingURLs(ctx context.Context, urls ...string) error {
 func (s *storage) SaveParsedArticle(ctx context.Context, article model.ParsedArticle) error {
 	return s.inTx(ctx, func(ctx context.Context, tx *sql.Tx) error {
 		// Set status to COMPLETED
-		_, err := squirrel.Update(_articleTable).Set("status", _completed).
+		_, err := squirrel.Update(_articleTable).
+			Set("status", _completed).
+			Set("name", article.Name).
 			Where(squirrel.Eq{"url": article.URL}).
 			RunWith(tx).
 			ExecContext(ctx)
