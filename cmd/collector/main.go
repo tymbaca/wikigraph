@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -56,7 +57,13 @@ func main() {
 
 	// workers.Launch(ctx, `https://ru.wikipedia.org/wiki/%d0%9c%d0%b8%d1%84`)
 	// workers.Launch(ctx, `https://en.wikipedia.org/wiki/Myth`)
-	workers.Launch(ctx, `https://os.wikipedia.org/wiki/%D0%A2%D1%83%D1%80%D0%BA`)
+	// workers.Launch(ctx, `https://os.wikipedia.org/wiki/%D0%A2%D1%83%D1%80%D0%BA`)
+	link, err := url.PathUnescape(`https://wo.wikipedia.org/wiki/Wolof_(l%C3%A0kk)`)
+	if err != nil {
+		panic(err)
+	}
+
+	workers.Launch(ctx, link)
 }
 
 type fakeAPI struct{}
