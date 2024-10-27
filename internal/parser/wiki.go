@@ -5,6 +5,7 @@ import (
 	"net/http"
 	urllib "net/url"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
@@ -23,7 +24,10 @@ type WikiParser struct {
 	client *http.Client
 }
 
-var wikiLinkRegex = regexp.MustCompile(`href="(\/wiki.*?)"`)
+var (
+	_wikiLinkRegex   = regexp.MustCompile(`href=["'](\/wiki.*?)["']`)
+	_ignoredSuffixes = []string{".svg", ".png", ".gif", ".jpg", ".jpeg"}
+)
 
 func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -58,11 +62,11 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 		if err != nil {
 			return
 		}
-		matches := wikiLinkRegex.FindAllStringSubmatch(text, -1)
+		matches := _wikiLinkRegex.FindAllStringSubmatch(text, -1)
 		for _, match := range matches {
 			childURL, err := urllib.Parse(match[1])
 			if err != nil {
-				return
+				continue
 			}
 
 			// leave only schema, domain and path
@@ -70,17 +74,20 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 			childURL.RawFragment = ""
 			childURL.RawQuery = ""
 
-			var child string
 			if !childURL.IsAbs() {
 				childURL.Scheme = parentURL.Scheme
 				childURL.Host = parentURL.Host
 			}
 
-			child = childURL.String()
-			child, err = urllib.PathUnescape(child) // TODO: do we really need this?
+			child := childURL.String()
+			child, err = urllib.PathUnescape(child)
 			if err != nil {
 				logger.Fatalf("can't unescape the path: %s", childURL.String())
 				return
+			}
+
+			if hasSuffixes(child, _ignoredSuffixes...) {
+				continue
 			}
 
 			childs = append(childs, child)
@@ -92,4 +99,14 @@ func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle
 		URL:       url,
 		ChildURLs: lo.Uniq(childs),
 	}, nil
+}
+
+func hasSuffixes(s string, suffixes ...string) bool {
+	for _, suffix := range suffixes {
+		if strings.HasSuffix(s, suffix) {
+			return true
+		}
+	}
+
+	return false
 }
