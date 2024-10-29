@@ -15,17 +15,19 @@ import (
 	"github.com/samber/lo"
 	"github.com/tymbaca/wikigraph/internal/logger"
 	"github.com/tymbaca/wikigraph/internal/model"
+	"github.com/tymbaca/wikigraph/pkg/httpclient"
 	"golang.org/x/net/html"
 )
 
 func NewWikiHtmlParser() *WikiHtmlParser {
 	return &WikiHtmlParser{
-		client: &http.Client{Timeout: 1 * time.Minute},
+		// client: &http.Client{Timeout: 1 * time.Minute},
+		client: httpclient.NewRateLimitingClient(&http.Client{Timeout: 1 * time.Minute}, 6, 1),
 	}
 }
 
 type WikiHtmlParser struct {
-	client *http.Client
+	client httpclient.Client
 }
 
 var (
@@ -42,7 +44,9 @@ func (w *WikiHtmlParser) Parse(ctx context.Context, url string) (model.ParsedArt
 		return model.ParsedArticle{}, err
 	}
 
-	req.URL.Path = req.URL.EscapedPath()
+	// oldPath := req.URL.Path
+	// req.URL.Path = req.URL.EscapedPath()
+	// logger.Debugf("old path %s, new path %s", oldPath, req.URL.Path)
 
 	parentURL, err := urllib.Parse(url)
 	if err != nil {
