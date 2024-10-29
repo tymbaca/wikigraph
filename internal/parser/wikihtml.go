@@ -18,13 +18,13 @@ import (
 	"golang.org/x/net/html"
 )
 
-func NewWikiParser() *WikiParser {
-	return &WikiParser{
+func NewWikiHtmlParser() *WikiHtmlParser {
+	return &WikiHtmlParser{
 		client: &http.Client{Timeout: 1 * time.Minute},
 	}
 }
 
-type WikiParser struct {
+type WikiHtmlParser struct {
 	client *http.Client
 }
 
@@ -36,7 +36,7 @@ var (
 	}
 )
 
-func (w *WikiParser) Parse(ctx context.Context, url string) (model.ParsedArticle, error) {
+func (w *WikiHtmlParser) Parse(ctx context.Context, url string) (model.ParsedArticle, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return model.ParsedArticle{}, err
