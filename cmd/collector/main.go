@@ -23,8 +23,8 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	db, err := sql.Open("sqlite3", "./eng-wiki.db") // TODO flag
-	// db, err := sql.Open("sqlite3", "./russian-wiki.db") // TODO flag
+	// db, err := sql.Open("sqlite3", "./eng-wiki.db") // TODO flag
+	db, err := sql.Open("sqlite3", "./russian-wiki.db") // TODO flag
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,16 +56,16 @@ func main() {
 	workers := workers.New(10, time.Duration(50*time.Millisecond), parser, storage)
 
 	// workers.Launch(ctx, `https://ru.wikipedia.org/wiki/%d0%9c%d0%b8%d1%84`)
-	workers.Launch(ctx, `https://en.wikipedia.org/wiki/Myth`)
+	// workers.Launch(ctx, `https://en.wikipedia.org/wiki/Myth`)
 	// workers.Launch(ctx, `https://os.wikipedia.org/wiki/%D0%A2%D1%83%D1%80%D0%BA`)
 	// link, err := url.PathUnescape(`https://wo.wikipedia.org/wiki/Wolof_(l%C3%A0kk)`)
 	// link, err := url.PathUnescape(`https://ru.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%9D%D0%B5%D0%B1%D1%80%D0%B0%D1%81%D0%BA%D0%B8`)
 	// if err != nil {
 	// 	panic(err)
 	// }
-	// link := `https://ru.wikipedia.org/wiki/%D0%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%9D%D0%B5%D0%B1%D1%80%D0%B0%D1%81%D0%BA%D0%B8`
-	//
-	// workers.Launch(ctx, link)
+	link := `https://ru.wikipedia.org/wiki/%D1%98%D1%81%D1%82%D0%BE%D1%80%D0%B8%D1%8F_%D0%9D%D0%B5%D0%B1%D1%80%D0%B0%D1%81%D0%BA%D0%B8`
+
+	workers.Launch(ctx, link)
 }
 
 type fakeAPI struct{}

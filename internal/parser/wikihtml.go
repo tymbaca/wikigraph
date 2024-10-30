@@ -15,19 +15,19 @@ import (
 	"github.com/samber/lo"
 	"github.com/tymbaca/wikigraph/internal/logger"
 	"github.com/tymbaca/wikigraph/internal/model"
-	"github.com/tymbaca/wikigraph/pkg/httpclient"
+	"github.com/tymbaca/wikigraph/pkg/httpx"
 	"golang.org/x/net/html"
 )
 
 func NewWikiHtmlParser() *WikiHtmlParser {
 	return &WikiHtmlParser{
 		// client: &http.Client{Timeout: 1 * time.Minute},
-		client: httpclient.NewRateLimitingClient(&http.Client{Timeout: 1 * time.Minute}, 6, 1),
+		client: httpx.NewRateLimitingClient(&http.Client{Timeout: 1 * time.Minute}, 6, 1),
 	}
 }
 
 type WikiHtmlParser struct {
-	client httpclient.Client
+	client httpx.Client
 }
 
 var (

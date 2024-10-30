@@ -1,4 +1,4 @@
-package httpclient
+package httpx
 
 import (
 	"context"
