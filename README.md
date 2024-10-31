@@ -11,6 +11,12 @@ in external software. For example you can directly import that file to
 
 TODO: images
 
+## Install
+
+```
+go install 
+```
+
 ## Usage
 
 ### Parse
