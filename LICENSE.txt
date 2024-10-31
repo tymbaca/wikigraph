@@ -1,4 +1,4 @@
-MI Lcense
+MIT License
 
 Copyright (c) [2024] [Tigran Rostomyan]
 
