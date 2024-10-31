@@ -9,12 +9,15 @@ Your can export collected links as a CSV table (see [usage](#usage)) to be used
 in external software. For example you can directly import that file to 
 [Cosmograph](https://cosmograph.app/run/) to visualize the graph:
 
-TODO: images
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/d398b28a-5028-44bd-8049-0aa1d98df3c5" width="400" /> 
+  <img src="https://github.com/user-attachments/assets/0db5a20f-9c5f-4f6c-add5-4dc61814a152" width="400" />
+</p>
 
 ## Install
 
 ```
-go install 
+go install github.com/tymbaca/wikigraph@latest
 ```
 
 ## Usage
