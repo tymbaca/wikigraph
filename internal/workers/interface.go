@@ -17,7 +17,4 @@ type Storage interface {
 	AddPendingURLs(ctx context.Context, urls ...string) error
 	ResetInProgressURLs(ctx context.Context) error
 	SetFailed(ctx context.Context, url string, err error) error
-	GetNotCompletedCount(ctx context.Context) (int, error)
-
-	GetGraph(ctx context.Context) (model.Graph, error)
 }

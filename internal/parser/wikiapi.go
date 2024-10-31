@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	EnRegion = "en"
 	RuRegion = "ru"
 )
 

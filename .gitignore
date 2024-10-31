@@ -2,3 +2,4 @@
 *.db
 __debug*
 debug/*
+.DS_Store

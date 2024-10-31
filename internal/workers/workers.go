@@ -107,12 +107,10 @@ func (ws *Workers) parseURL(_ context.Context, workerID int) error {
 	// ctx := context.Background()
 
 	url, err := ws.storage.GetURLToProcess(ctx)
-	if err != nil {
-		if errors.Is(err, errs.ErrNotFound) {
-			logger.Infof("worker %d: no pending urls", workerID)
-			return nil
-		}
-
+	if errors.Is(err, errs.ErrNotFound) {
+		logger.Infof("worker %d: no pending urls", workerID)
+		return nil
+	} else if err != nil {
 		return fmt.Errorf("worker %d: got error when getting pending url: %s", workerID, err)
 	}
 

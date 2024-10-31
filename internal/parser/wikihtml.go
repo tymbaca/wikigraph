@@ -9,7 +9,6 @@ import (
 	"path"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/samber/lo"
@@ -19,10 +18,9 @@ import (
 	"golang.org/x/net/html"
 )
 
-func NewWikiHtmlParser() *WikiHtmlParser {
+func NewWikiHtmlParser(client httpx.Client) *WikiHtmlParser {
 	return &WikiHtmlParser{
-		// client: &http.Client{Timeout: 1 * time.Minute},
-		client: httpx.NewRateLimitingClient(&http.Client{Timeout: 1 * time.Minute}, 6, 1),
+		client: client,
 	}
 }
 

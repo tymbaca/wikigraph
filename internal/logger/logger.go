@@ -5,14 +5,14 @@ import (
 )
 
 func init() {
-	Init()
+	Init(zerolog.DebugLevel)
 }
 
 var logger *zerolog.Logger
 
 // Init initializes a default logger.
-func Init() {
-	l := zerolog.New(zerolog.NewConsoleWriter()).With().CallerWithSkipFrameCount(3).Timestamp().Logger()
+func Init(level zerolog.Level) {
+	l := zerolog.New(zerolog.NewConsoleWriter()).With().Timestamp().Logger().Level(level)
 
 	logger = &l
 }
