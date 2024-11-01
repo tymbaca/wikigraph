@@ -81,12 +81,20 @@ Run `wikigraph help` for more info.
 `<Crlt-c>`. Program will wait until all workers will parse and save their 
 results and only then exits.
 
-**Rate limiter**. Program uses internal http client with rate limiting by 
+**Rate Limiter**. Program uses internal http client with rate limiting by 
 default set to 20 RPS (it's hardcoded). I found this rate most optimal. If you 
 get `429 Too Many Requests` then just wait a bit and try again. Or you can can 
 change the rate (in `cmd/wikigraph/main.go`) in code and recompile the program. 
 I'm too lazy to add RPS flag (just look at how I handle cli arguments in main.go 
 lol).
+
+**Worker Pool**. Program uses a pool of workers parallelize parsing workload.
+
+**Job Queueing**. Every fetched child link is pushed to the job queue with 
+PENDING status, so later on another worker can grab it, parse it and produce 
+more child articles. Job queue is basically an `article` table in SQLite DB, 
+you can explore it with any suitable DB client. If program exits, you still 
+have all the queue in database, so you can restart easely.
 
 ## Language support
 Program was tested with English, Russian and [Wolof](https://en.wikipedia.org/wiki/Wolof_language) Wikipedia.
