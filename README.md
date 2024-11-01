@@ -1,6 +1,6 @@
 # Wikigraph
 
-Tool for parsing wikipedia articles graph.
+Tool for parsing Wikipedia articles graph.
 
 It takes the provided initial wikipedia links, parses them, gets the child links 
 and adds them to parsing queue. It also saves parsed article name.
@@ -56,9 +56,9 @@ Now you can export the graph to CSV file:
 wikigraph export my_graph.db my_graph.csv
 ```
 
-Notice that you can run this at any time. You don't need to parse all wikipedia :)
+Notice that you can run this at any time. You don't need to parse all articles in Wikipedia :)
 
-The exported graph will loop something like this:
+The exported graph will look something like this:
 
 ```csv
 from,to
@@ -87,3 +87,10 @@ get `429 Too Many Requests` then just wait a bit and try again. Or you can can
 change the rate (in `cmd/wikigraph/main.go`) in code and recompile the program. 
 I'm too lazy to add RPS flag (just look at how I handle cli arguments in main.go 
 lol).
+
+## Language support
+Program was tested with English, Russian and [Wolof](https://en.wikipedia.org/wiki/Wolof_language) Wikipedia.
+So any other non-ascii language articles can be supported, as long as they match similar HTML layout.
+
+## TODO
+- [ ] Use official [MediaWiki API](https://www.mediawiki.org/wiki/API:Main_page) instead of parsing the whole HTML of every article.
