@@ -37,7 +37,7 @@ wikigraph parse my_graph.db https://en.wikipedia.org/wiki/Kingdom_of_Greece http
 ```
 
 Program will begin parsing the wikipedia, starting from provided URLs. You can exit 
-the program at any moment by pressing `<Ctrl-c>` (see [graceful shutdown](#usagedev-features)). 
+the program at any moment by pressing `<Ctrl-c>` (see [graceful shutdown](#good-thingies)). 
 
 Your can continue by launching program with already existing database file:
 
