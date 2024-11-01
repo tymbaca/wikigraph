@@ -36,16 +36,17 @@ Or:
 wikigraph parse my_graph.db https://en.wikipedia.org/wiki/Kingdom_of_Greece https://en.wikipedia.org/wiki/Christmas
 ```
 
-Program will begin parsing wikipedia, starting from privided URLs. You can exit 
+Program will begin parsing the wikipedia, starting from provided URLs. You can exit 
 the program at any moment by pressing `<Ctrl-c>` (see [graceful shutdown](#usagedev-features)). 
 
-Your can continue the progress by launching program with already existing database file:
+Your can continue by launching program with already existing database file:
 
 ```
 wikigraph parse my_graph.db
 ```
 
-It will continue parsing as expected (without loosing the progress).
+It will continue parsing as expected (without loosing the progress). 
+Also it will retry all links that it failed to parse in previous attempt.
 
 ### Export
 
