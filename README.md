@@ -77,6 +77,14 @@ Run `wikigraph help` for more info.
 
 ## Good thingies
 
+**Worker Pool**. Program uses a pool of workers parallelize parsing workload.
+
+**Job Queueing**. Every fetched child link is pushed to the job queue with 
+PENDING status, so later on another worker can grab it, parse it and produce 
+more child articles. Job queue is basically an `article` table in SQLite DB, 
+you can explore it with any suitable DB client. If program exits, you still 
+have all the queue in database, so you can restart easely.
+
 **Graceful Shutdown**. Any time while program is executing you can press 
 `<Crlt-c>`. Program will wait until all workers will parse and save their 
 results and only then exits.
@@ -88,13 +96,6 @@ change the rate (in `cmd/wikigraph/main.go`) in code and recompile the program.
 I'm too lazy to add RPS flag (just look at how I handle cli arguments in main.go 
 lol).
 
-**Worker Pool**. Program uses a pool of workers parallelize parsing workload.
-
-**Job Queueing**. Every fetched child link is pushed to the job queue with 
-PENDING status, so later on another worker can grab it, parse it and produce 
-more child articles. Job queue is basically an `article` table in SQLite DB, 
-you can explore it with any suitable DB client. If program exits, you still 
-have all the queue in database, so you can restart easely.
 
 ## Language support
 Program was tested with English, Russian and [Wolof](https://en.wikipedia.org/wiki/Wolof_language) Wikipedia.
