@@ -52,7 +52,7 @@ export
 env
 	WIKIGRAPH_RPS
 		Requests per second limit for parsing. Defaults to 5.
-        WIKIGRAPH_WORKERS [4]
+        WIKIGRAPH_WORKERS
 		Parallel worker count. Defaults to 4.
 	`
 
