@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -35,7 +36,6 @@ parse
                 Path to sqlite database file. If it exists and it already
                 has some data, then it will be used to continue the progress.
                 If it doesn't exists, it will be created.
-
         [initial_links...]
                 Optional wikipedia links that will be inserted into the parsing 
                 queue at the start of a program.
@@ -46,10 +46,15 @@ export
 
         <db_path> 
                 Path to sqlite database file from where graph will be exported.
-
         <export_path> 
                 Path where resulting graph (in csv) will be exported.
-`
+
+env
+	WIKIGRAPH_RPS
+		Requests per second limit for parsing. Defaults to 5.
+        WIKIGRAPH_WORKERS [4]
+		Parallel worker count. Defaults to 4.
+	`
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -60,9 +65,21 @@ func main() {
 		return
 	}
 
+	rpsStr := os.Getenv("WIKIGRAPH_RPS")
+	rps, err := strconv.ParseFloat(rpsStr, 64)
+	if err != nil {
+		rps = 5
+	}
+
+	workerCountStr := os.Getenv("WIKIGRAPH_WORKERS")
+	workerCount, err := strconv.Atoi(workerCountStr)
+	if err != nil {
+		workerCount = 4
+	}
+
 	switch os.Args[1] {
 	case "parse":
-		parseCmd(ctx)
+		parseCmd(ctx, rps, workerCount)
 		return
 	case "export":
 		if len(os.Args) != 4 {
@@ -77,15 +94,15 @@ func main() {
 	}
 }
 
-func parseCmd(ctx context.Context) {
+func parseCmd(ctx context.Context, rps float64, workerCount int) {
 	dbPath := os.Args[2]
 	db := connectToDB(dbPath)
 	defer db.Close()
 
-	client := httpx.NewRateLimitingClient(&http.Client{Timeout: 1 * time.Minute}, 20, 1)
+	client := httpx.NewRateLimitingClient(&http.Client{Timeout: 1 * time.Minute}, rps, 1)
 	parser := parser.NewWikiHtmlParser(client)
 	storage := storage.New(db)
-	workers := workers.New(10, time.Duration(50*time.Millisecond), parser, storage)
+	workers := workers.New(workerCount, time.Duration(50*time.Millisecond), parser, storage)
 
 	var initialLinks []string
 	if len(os.Args) >= 4 {

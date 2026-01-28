@@ -46,6 +46,8 @@ func (w *WikiHtmlParser) Parse(ctx context.Context, url string) (model.ParsedArt
 	// req.URL.Path = req.URL.EscapedPath()
 	// logger.Debugf("old path %s, new path %s", oldPath, req.URL.Path)
 
+	req.Header.Add("User-Agent", "curl/8.4.0")
+
 	parentURL, err := urllib.Parse(url)
 	if err != nil {
 		return model.ParsedArticle{}, err

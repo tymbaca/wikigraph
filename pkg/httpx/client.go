@@ -16,7 +16,7 @@ type Client interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewRateLimitingClient(client Client, rps, burst int) *RateLimitingClient {
+func NewRateLimitingClient(client Client, rps float64, burst int) *RateLimitingClient {
 	return &RateLimitingClient{
 		client: client,
 		lim:    rate.NewLimiter(rate.Limit(rps), burst),
